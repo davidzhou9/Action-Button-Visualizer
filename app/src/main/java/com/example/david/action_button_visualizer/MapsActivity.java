@@ -1,5 +1,7 @@
 package com.example.david.action_button_visualizer;
 
+import android.content.res.AssetManager;
+import android.renderscript.ScriptGroup;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
@@ -7,21 +9,60 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private List<NewsArticle> articles;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        articles = readFromDB();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+    }
+
+    /**
+     * Comment this
+     * @return ArrayList<NewsArticle></NewsArticle>
+     */
+    private List<NewsArticle> readFromDB(){
+        List<NewsArticle> temp = new ArrayList<NewsArticle>();
+        try {
+            AssetManager am = this.getAssets();
+            InputStream is = am.open("articleTable.txt");
+            Scanner scan = new Scanner(is);
+            while (scan.hasNextLine()) {
+                String title = scan.nextLine();
+                String url = scan.nextLine();
+                String[] coordinates = scan.nextLine().split(" ");
+                double latitude = Double.parseDouble(coordinates[0]);
+                double longitude = Double.parseDouble(coordinates[1]);
+                temp.add(new NewsArticle(title, url, latitude, longitude));
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return temp;
     }
 
 
@@ -39,8 +80,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+        for (NewsArticle article : articles) {
+            String title = article.getName();
+            String url = article.getLink();
+            LatLng loc = article.getLoc();
+            mMap.addMarker(new MarkerOptions().position(loc).title(title + " " + loc.toString()));
+        }
     }
 }

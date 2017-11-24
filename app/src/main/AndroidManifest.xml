@@ -30,7 +30,11 @@
 
         <activity
             android:name=".MapsActivity"
+            android:screenOrientation="landscape"
             android:label="@string/title_activity_maps">
+        </activity>
+        <activity android:name=".MainActivity"
+            android:screenOrientation="landscape" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
