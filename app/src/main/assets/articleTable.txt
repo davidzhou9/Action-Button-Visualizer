@@ -16,17 +16,21 @@ disaster
 18.2208 -66.5901
 Raqqa: Charities demand urgent help for Syrian city's refugees
 http://www.independent.co.uk/news/uk/politics/raqqa-latest-syria-help-urgently-needed-ngos-demand-refugees-a8006016.html
-35.9594 38.9981
 disaster
+35.9594 38.9981
 Beijing still one of worst polluted cities in China despite smog crackdown
 http://www.scmp.com/news/china/policies-politics/article/2117541/beijing-among-worst-polluted-cities-china-despite-smog
-39.9042 116.4074
 sustainability
-The Latest: General: Russia likely to scale down in Syria
-http://abcnews.go.com/International/wireStory/latest-hezbollah-welcomes-pms-positive-statements-51343989
-34.8021 38.9968
-news
+39.9042 116.4074
 Goodbye Angela Merkel: Can Political Strife Undermine Europe's Economic Recovery?
 https://www.forbes.com/sites/kenrapoza/2017/11/24/goodbye-angela-merkel-can-political-strife-undermine-europes-economic-recovery/#59c427d35a41
-52.5200 13.4050
 politics
+52.5200 13.4050
+Brazilian Judge Sparks Outrage By Approving Gay Conversion Therapy
+https://www.huffingtonpost.com/entry/gay-conversion-therapy-brazil_us_59c195e2e4b087fdf508e2e2?utm_hp_ref=south-america
+socialjustice
+-15.7942 -47.8822
+Brazil hopes to reward landowners for preserving Amazon forest
+https://www.reuters.com/article/us-brazil-environment-climatechange/brazil-hopes-to-reward-landowners-for-preserving-amazon-forest-idUSKBN1CZ1Z8
+sustainability
+-3.4653 -62.2159
