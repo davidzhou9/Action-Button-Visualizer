@@ -9,12 +9,14 @@ import com.google.android.gms.maps.model.LatLng;
 public class NewsArticle {
     private String name;
     private String link;
+    private String category;
     private LatLng loc;
 
-    public NewsArticle(String name, String link, double latitude, double longitude) {
+    public NewsArticle(String name, String link, String category, double latitude, double longitude) {
         this.name = name;
         this.link = link;
-        loc = new LatLng(latitude, longitude);
+        this.category = category;
+        this.loc = new LatLng(latitude, longitude);
     }
 
     public String getName() {
@@ -23,6 +25,10 @@ public class NewsArticle {
 
     public String getLink() {
         return link;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public LatLng getLoc() {
