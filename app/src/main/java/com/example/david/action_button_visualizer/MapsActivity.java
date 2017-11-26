@@ -1,10 +1,12 @@
 package com.example.david.action_button_visualizer;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.renderscript.ScriptGroup;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -24,6 +26,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.apache.http.NameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,17 +40,41 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+
+/**
+ * Class description: MapsActivity class handles the Google maps UI and relevant news markers
+ */
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private List<NewsArticle> articles;
+    private ProgressDialog pDialog;
+    JSONParser jParser = new JSONParser();
+
+    // JSON Node names
+    private static final String TAG_SUCCESS = "success";
+    private static final String TAG_ARTICLES = "articles";
+    private static final String TAG_title = "title";
+    private static final String TAG_URL = "url";
+    private static final String TAG_CATEGORY = "category";
+    private static final String TAG_LATITUDE = "latitude";
+    private static final String TAG_LONGITUDE = "longitude";
+
+    // url to get all products list
+    private static String url_all_products = "http://localhost/actionbtnbackend/get_all_articles.php";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // set the views
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        // get the article information from the database
         articles = readFromDB();
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -51,7 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /**
-     * Comment this
+     * Read news article information from database, store into list, and return the list
      * @return ArrayList<NewsArticle></NewsArticle>
      */
     private List<NewsArticle> readFromDB(){
@@ -91,14 +122,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        // add the NewsArticles to the map as markers
         for (NewsArticle article : articles) {
             String title = article.getName();
             String url = article.getLink();
             LatLng loc = article.getLoc();
+
+            // assigns bitmap based on news category (i.e. sustainability, disaster, etc.)
             BitmapDescriptor bitmap = BitmapDescriptorFactory.fromBitmap(resizeMapIcons(article.getCategory(), 120, 120));
 
 
-
+            // add the marker with relevant params
             mMap.addMarker(new MarkerOptions()
                     .position(loc)
                     .icon(bitmap)
@@ -106,6 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .setSnippet(url);
         }
 
+        // use InfoWindow to add custom view to map Markers
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             public View getInfoWindow(Marker marker) {
@@ -114,13 +149,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public View getInfoContents(final Marker marker) {
+
+
                 View v = getLayoutInflater().inflate(R.layout.windowlayout, null);
-
-
                 TextView tvTitle = (TextView) v.findViewById(R.id.tv_title);
 
-                TextView btn = (TextView) v.findViewById(R.id.tv_link);
-
+                // set the article title
                 tvTitle.setText(marker.getTitle());
                 tvTitle.setTextSize(20);
 
@@ -130,6 +164,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+
+        // when InfoWindow is clicked, open the link in browser
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
@@ -143,15 +179,82 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /**
-     * Comment this
+     * Method to resize bitmap icons to desired size
      * @param iconName
      * @param width
      * @param height
      * @return Bitmap
      */
-    public Bitmap resizeMapIcons(String iconName, int width, int height){
+    private Bitmap resizeMapIcons(String iconName, int width, int height){
         Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),getResources().getIdentifier(iconName, "drawable", getPackageName()));
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, width, height, false);
         return resizedBitmap;
+    }
+
+    /**
+     * Background Async Task to Load all product by making HTTP Request
+     * */
+    class LoadAllProducts extends AsyncTask<String, String, String> {
+
+        /**
+         * Before starting background thread Show Progress Dialog
+         * */
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            pDialog = new ProgressDialog(MapsActivity.this);
+            pDialog.setMessage("Loading products. Please wait...");
+            pDialog.setIndeterminate(false);
+            pDialog.setCancelable(false);
+            pDialog.show();
+        }
+
+        /**
+         * getting All products from url
+         * */
+        protected String doInBackground(String... args) {
+            // Building Parameters
+            List<NameValuePair> params = new ArrayList<NameValuePair>();
+            // getting JSON string from URL
+            JSONObject json = jParser.makeHttpRequest(url_all_products, "GET", params);
+
+            // Check your log cat for JSON reponse
+            Log.d("All Products: ", json.toString());
+
+            try {
+                // Checking for SUCCESS TAG
+                int success = json.getInt(TAG_SUCCESS);
+
+                if (success == 1) {
+                    // products found
+                    // Getting Array of Products
+                    JSONArray articleArray = json.getJSONArray(TAG_ARTICLES);
+
+                    // looping through All Products
+                    for (int i = 0; i < articleArray.length(); i++) {
+                        JSONObject c = articleArray.getJSONObject(i);
+
+                        // Storing each json item in variable
+//                        String id = c.getString(TAG_PID);
+//                        String name = c.getString(TAG_NAME);
+
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        /**
+         * After completing background task Dismiss the progress dialog
+         * **/
+        protected void onPostExecute(String file_url) {
+            // dismiss the dialog after getting all products
+            pDialog.dismiss();
+
+        }
+
     }
 }
