@@ -13,6 +13,10 @@ Users can pan across the Google Maps UI and click on icons (each icon correspond
 
 Action Button Visualizer is built using Android studio and parses the data from a local JSON styled file. I used a local data file as opposed to web API since I could not find a Speakable API or a news API that fit my needs.
 
+## Download the App
+
+Go here https://drive.google.com/file/d/1SFPVBtKpJjOHg011nLxcWiLX4flZgY_C/view?usp=sharing, download the APK file to your Android phone, and follow the installation process. You may need to change your settings in order to allow for 3rd party app installation.
+
 ## Screenshots of the Application
 
 Initial Loading Screen with Legend
