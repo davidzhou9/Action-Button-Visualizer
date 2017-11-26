@@ -15,3 +15,4 @@ Action Button Visualizer is built using Android studio and parses the data from 
 
 ## Screenshots of the Application
 
+https://github.com/davidzhou9/Action-Button-Visualizer/issues/1
