@@ -6,7 +6,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -21,19 +20,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.apache.http.NameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -58,7 +50,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String TAG_LATITUDE = "latitude";
     private static final String TAG_LONGITUDE = "longitude";
 
-    // url to get all articles
+    // file to get all articles
     private static String file_all_articles = "articleJSON.txt";
 
 
@@ -69,6 +61,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
 
         try {
+            // get JSONObject from text file and then put into articles list
             JSONObject temp = readJSONFromFile(file_all_articles);
             articles = getArticlesFromJSON(temp);
         } catch (IOException e) {
@@ -81,33 +74,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-    }
-
-    /**
-     * Read news article information from database, store into list, and return the list
-     * @return ArrayList<NewsArticle></NewsArticle>
-     */
-    private List<NewsArticle> readFromDB(){
-        List<NewsArticle> temp = new ArrayList<NewsArticle>();
-        try {
-            AssetManager am = this.getAssets();
-            InputStream is = am.open("articleTable.txt");
-            Scanner scan = new Scanner(is);
-            while (scan.hasNextLine()) {
-                String title = scan.nextLine();
-                String url = scan.nextLine();
-                String category = scan.nextLine();
-                String[] coordinates = scan.nextLine().split(" ");
-                double latitude = Double.parseDouble(coordinates[0]);
-                double longitude = Double.parseDouble(coordinates[1]);
-                temp.add(new NewsArticle(title, url, category, latitude, longitude));
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return temp;
     }
 
 
@@ -192,12 +158,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return resizedBitmap;
     }
 
+    /**
+     * Gets JSONObject from reading file
+     * @param file
+     * @return JSONObject
+     * @throws IOException
+     * @throws JSONException
+     */
     public JSONObject readJSONFromFile(String file) throws IOException, JSONException {
 
+        // open file from assets folder
         AssetManager am = this.getAssets();
         InputStream is = am.open(file);
         Scanner scan = new Scanner(is);
         String jsonText = "";
+
+        // read the data
         while (scan.hasNextLine()) {
             jsonText += scan.nextLine();
         }
@@ -205,16 +181,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return json;
     }
 
+    /**
+     * Parse the JSONObject and put entries into articles list
+     * @param json
+     * @return List<NewsArticle></NewsArticle>
+     * @throws JSONException
+     */
     public List<NewsArticle> getArticlesFromJSON(JSONObject json) throws JSONException {
         int success = json.getInt(TAG_SUCCESS);
         JSONArray temp = new JSONArray();
         List<NewsArticle> listOfArticles = new ArrayList<>();
 
+        // check if we were able to read JSON object
         if (success == 1) {
-            // Getting Array of Products
+            // Getting Array of articles
             temp = json.getJSONArray(TAG_ARTICLES);
 
-            // looping through All Products
+            // looping through All articles
             for (int i = 0; i < temp.length(); i++) {
                 JSONObject c = temp.getJSONObject(i);
 
