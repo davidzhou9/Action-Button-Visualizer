@@ -17,7 +17,7 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         // set views
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_splash);
 
         // Get Action Button logo
         ImageView logo = (ImageView) findViewById(R.id.actionBtnLogo);

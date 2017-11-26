@@ -7,19 +7,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.renderscript.ScriptGroup;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -35,8 +30,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -50,7 +48,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private List<NewsArticle> articles;
     private ProgressDialog pDialog;
-    JSONParser jParser = new JSONParser();
 
     // JSON Node names
     private static final String TAG_SUCCESS = "success";
@@ -61,8 +58,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String TAG_LATITUDE = "latitude";
     private static final String TAG_LONGITUDE = "longitude";
 
-    // url to get all products list
-    private static String url_all_products = "http://localhost/actionbtnbackend/get_all_articles.php";
+    // url to get all articles
+    private static String file_all_articles = "articleJSON.txt";
 
 
     @Override
@@ -71,9 +68,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        // get the article information from the database
-        articles = readFromDB();
-
+        try {
+            JSONObject temp = readJSONFromFile(file_all_articles);
+            articles = getArticlesFromJSON(temp);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -112,8 +114,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
+     * This is where we can add markers or lines, add listeners or move the camera.
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
@@ -191,70 +192,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return resizedBitmap;
     }
 
-    /**
-     * Background Async Task to Load all product by making HTTP Request
-     * */
-    class LoadAllProducts extends AsyncTask<String, String, String> {
+    public JSONObject readJSONFromFile(String file) throws IOException, JSONException {
 
-        /**
-         * Before starting background thread Show Progress Dialog
-         * */
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            pDialog = new ProgressDialog(MapsActivity.this);
-            pDialog.setMessage("Loading products. Please wait...");
-            pDialog.setIndeterminate(false);
-            pDialog.setCancelable(false);
-            pDialog.show();
+        AssetManager am = this.getAssets();
+        InputStream is = am.open(file);
+        Scanner scan = new Scanner(is);
+        String jsonText = "";
+        while (scan.hasNextLine()) {
+            jsonText += scan.nextLine();
         }
+        JSONObject json = new JSONObject(jsonText);
+        return json;
+    }
 
-        /**
-         * getting All products from url
-         * */
-        protected String doInBackground(String... args) {
-            // Building Parameters
-            List<NameValuePair> params = new ArrayList<NameValuePair>();
-            // getting JSON string from URL
-            JSONObject json = jParser.makeHttpRequest(url_all_products, "GET", params);
+    public List<NewsArticle> getArticlesFromJSON(JSONObject json) throws JSONException {
+        int success = json.getInt(TAG_SUCCESS);
+        JSONArray temp = new JSONArray();
+        List<NewsArticle> listOfArticles = new ArrayList<>();
 
-            // Check your log cat for JSON reponse
-            Log.d("All Products: ", json.toString());
+        if (success == 1) {
+            // Getting Array of Products
+            temp = json.getJSONArray(TAG_ARTICLES);
 
-            try {
-                // Checking for SUCCESS TAG
-                int success = json.getInt(TAG_SUCCESS);
+            // looping through All Products
+            for (int i = 0; i < temp.length(); i++) {
+                JSONObject c = temp.getJSONObject(i);
 
-                if (success == 1) {
-                    // products found
-                    // Getting Array of Products
-                    JSONArray articleArray = json.getJSONArray(TAG_ARTICLES);
+                // Storing each json item in variable
+                String title = c.getString(TAG_title);
+                String url = c.getString(TAG_URL);
+                String category = c.getString(TAG_CATEGORY);
+                double latitude = c.getDouble(TAG_LATITUDE);
+                double longitude = c.getDouble(TAG_LONGITUDE);
 
-                    // looping through All Products
-                    for (int i = 0; i < articleArray.length(); i++) {
-                        JSONObject c = articleArray.getJSONObject(i);
-
-                        // Storing each json item in variable
-//                        String id = c.getString(TAG_PID);
-//                        String name = c.getString(TAG_NAME);
-
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
+                listOfArticles.add(new NewsArticle(title, url, category, latitude, longitude));
             }
-
-            return null;
         }
-
-        /**
-         * After completing background task Dismiss the progress dialog
-         * **/
-        protected void onPostExecute(String file_url) {
-            // dismiss the dialog after getting all products
-            pDialog.dismiss();
-
-        }
-
+        return listOfArticles;
     }
 }
