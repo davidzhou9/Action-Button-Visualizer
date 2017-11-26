@@ -15,7 +15,7 @@ Action Button Visualizer is built using Android studio and parses the data from 
 
 ## Download the App
 
-Go here https://drive.google.com/file/d/1SFPVBtKpJjOHg011nLxcWiLX4flZgY_C/view?usp=sharing, download the APK file to your Android phone, and follow the installation process. You may need to change your settings in order to allow for 3rd party app installation.
+Go here https://drive.google.com/file/d/1Ovrx0g81k1Xab_RhZJAydA4XscPhrND3/view?usp=sharing, download the APK file to your Android phone, and follow the installation process. You may need to change your settings in order to allow for 3rd party app installation.
 
 ## Screenshots of the Application
 
